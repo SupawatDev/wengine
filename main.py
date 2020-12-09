@@ -81,6 +81,8 @@ class Env:
             total_ue = np.array(list(map(int, norm(loc=mean_day, scale=std_day).rvs(1))))
             self.week_traffic.append(total_ue)  # TODO[]: change to dynamic daily traffic
             day_traffic = np.array(list(map(int, norm(loc=43200, scale=19000).rvs(total_ue))))
+            day_traffic = day_traffic[day_traffic <= 86400] # Crop exceeded seconds
+            day_traffic = day_traffic[day_traffic >= 0]
             self.days_traffic.append(day_traffic)
 
     # TODO[]: Generate incoming UEs

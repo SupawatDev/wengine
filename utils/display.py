@@ -11,7 +11,7 @@ class Display:
         self.control.autoRotate = True
         self.control.autoRotateSpeed = 0.1
         self.figure.render_continuous = True
-        # TODO[x]: Prepare Scene
+        # TODO[x][x]: Prepare Scene
         self.scene = None
         self.make_scene(scene_path)
         ipv.style.use('minimal')
