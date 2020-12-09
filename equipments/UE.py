@@ -8,7 +8,8 @@ import numpy as np
 class UE:
     def __init__(self, env):
         self.env = env;
-        self.position = random.choice(env.end_points)
+        position = random.choice(self.env.end_points)
+        self.position = [position[0], random.random()*0.5+1.3, position[1]]
         self.direction = []
         self.step_rate = random.random() * 0.5 + 0.9
         self.visit_points = self.generate_visits()
@@ -63,10 +64,10 @@ class UE:
             while True:
                 if j < len(self.env.visit_points):
                     # check if visit point is direct
-                    check_pos = self.env.visit_points[j]
                     j += 1
+                    check_pos = self.env.visit_points[j]
                     check_pos = [check_pos[0], 1.5, check_pos[1]]
-                    if self.env.Comm.is_direct(current_pos, check_pos):
+                    if self.env.com.is_direct(current_pos, check_pos):
                         visit_points.append(check_pos)
                         current_pos = check_pos
                         break

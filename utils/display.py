@@ -13,7 +13,11 @@ class Display:
         self.figure.render_continuous = True
         # TODO[x]: Prepare Scene
         self.scene = None
-        self.make_scene()
+        self.make_scene(scene_path)
+        ipv.style.use('minimal')
+        ipv.xlim(-170, 170)
+        ipv.zlim(-170, 170)
+        ipv.ylim(-170, 170)
 
     # TODO[x]: Render Scene
     @staticmethod
@@ -25,7 +29,7 @@ class Display:
         x = vertices[:, 0]
         y = vertices[:, 1]
         z = vertices[:, 2]
-        self.scene = self.ipv.plot_trisuft(x,y,z, triangles=triangles, color='#06d6a0')
+        self.scene = ipv.plot_trisurf(x,y,z, triangles=triangles, color='#06d6a0')
         return
 
     def zoom_button(self):

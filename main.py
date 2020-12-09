@@ -1,5 +1,6 @@
 # TODO[]: main environment
-import os
+import os, random, socket
+from time import sleep
 import random
 from equipments import UE, BS
 from utils import Com, Display
@@ -20,16 +21,26 @@ class Env:
         self.day_of_week = 0
         self.current_time = 0
         self.days_traffic = []
-        # TODO[] points for poznan map
+        # TODO[x]: points for poznan map
         self.end_points = [[55.0, 0.5], [64.5, 32.2], [-3, -41.9], [-48.04, -13.38], [15.17, 62.914]]
         self.visit_points = [[11.75, 35.84], [37.92, 32.13], [27.81, -21.57], [0.89, -16.5], [-14.5, -2.5]]
         self.on_display = False
-        # TODO[] Socket
-        self.com = Com()
+        # TODO[] Connect to server
+        self.env_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while not self.connect():
+            print("Trying to connect " + str(server_ip) + ":" + str(server_port))
+            sleep(3)
+        self.com = Com(self.env_sock)
 
     def connect(self):
         # TODO[] : Connect socket to engine.
-        return None
+        try:
+            self.env_sock.connect((self.server_ip, self.server_port))
+            self.env_sock.send("Client: Hello Server".encode())
+            print(self.env_sock.recv(1024).decode())
+            return True
+        except:
+            return False
 
     def step(self):
         # Check if new UEs enters
@@ -46,7 +57,7 @@ class Env:
         reward = None
         return reward
 
-    def display(self, scene_path):
+    def open(self, scene_path):
         # TODO[x]: Display the plots
         self.display = Display(scene_path)
         self.display.show()
@@ -58,15 +69,15 @@ class Env:
         self.BSs[id(station)] = station
 
     def generate_ues(self):
-        ue = UE(self, position=random.choice(self.start_points))
+        ue = UE(self)
         self.UEs[id(ue)] = ue
 
     def generate_traffic(self):
         week_traffic_param = [[6000, 200], [5000, 400], [4500, 300], [3500, 200], [4000, 300], [7000, 150], [6500, 300]]
         self.week_traffic = []
         for day in range(len(week_traffic_param)):
-            mean_day = self.week_traffic[day][0]
-            std_day = self.week_traffic[day][1]
+            mean_day = week_traffic_param[day][0]
+            std_day = week_traffic_param[day][1]
             total_ue = np.array(list(map(int, norm(loc=mean_day, scale=std_day).rvs(1))))
             self.week_traffic.append(total_ue)  # TODO[]: change to dynamic daily traffic
             day_traffic = np.array(list(map(int, norm(loc=43200, scale=19000).rvs(total_ue))))
@@ -83,3 +94,9 @@ class Env:
     def set_datetime(self, current_time, day_of_week):
         self.current_time = current_time
         self.day_of_week = day_of_week
+
+    def disconnect(self):
+        self.env_sock.send("e".encode())
+        res = self.env_sock.recv(1024).decode()
+        assert res[0:3] == "eok"
+        self.env_sock.close()
