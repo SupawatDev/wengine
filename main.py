@@ -12,8 +12,8 @@ class Env:
     def __init__(self, server_ip, server_port):
         self.server_ip = server_ip
         self.server_port = server_port
-        self.BSs = {}
-        self.UEs = {}
+        self.BSs = []
+        self.UEs = []
         self.beams = {}
         self.display = None
         # Note: Simulation Parameters
@@ -44,14 +44,15 @@ class Env:
 
     def step(self):
         # Check if new UEs enters
-        self.time += 1
+        self.current_time += 1
         # Check incoming UEs
 
         # Updating existing UEs
         # TODO[]: Update the user groups
-        for UE_group in self.UEs:
+        for user in self.UEs:
             # TODO[]: Update group
-            None
+            user.step()
+            print(str(id(user)) + " : " + str(user.position))
             # TODO[]: Calculate rewards
         # TODO[]: Summarize rewards
         reward = None
@@ -60,8 +61,11 @@ class Env:
     def open(self, scene_path):
         # TODO[x]: Display the plots
         self.display = Display(scene_path)
-        self.display.show()
         self.on_display = True
+
+    def visualise(self, ues = None, bss = None):
+        self.display.run(ues, bss)
+
 
     def generate_bs(self, position, rotation, frequency, beam_id):
         # TODO[x]: Create BS
@@ -70,10 +74,14 @@ class Env:
 
     def generate_ues(self):
         ue = UE(self)
-        self.UEs[id(ue)] = ue
+        self.UEs.append(ue)
+        if self.on_display:
+            self.display.add_ue(ue)
+
 
     def generate_traffic(self):
-        week_traffic_param = [[6000, 200], [5000, 400], [4500, 300], [3500, 200], [4000, 300], [7000, 150], [6500, 300]]
+        week_traffic_param = [[6000, 200], [5000, 400], [4500, 300],
+                              [3500, 200], [4000, 300], [7000, 150], [6500, 300]]
         self.week_traffic = []
         for day in range(len(week_traffic_param)):
             mean_day = week_traffic_param[day][0]
@@ -81,7 +89,7 @@ class Env:
             total_ue = np.array(list(map(int, norm(loc=mean_day, scale=std_day).rvs(1))))
             self.week_traffic.append(total_ue)  # TODO[]: change to dynamic daily traffic
             day_traffic = np.array(list(map(int, norm(loc=43200, scale=19000).rvs(total_ue))))
-            day_traffic = day_traffic[day_traffic <= 86400] # Crop exceeded seconds
+            day_traffic = day_traffic[day_traffic <= 86400]  # Crop exceeded seconds
             day_traffic = day_traffic[day_traffic >= 0]
             self.days_traffic.append(day_traffic)
 
@@ -89,7 +97,7 @@ class Env:
     def generate_incoming_ue(self):
         today_traffic = self.days_traffic[self.day_of_week]
         today_traffic = today_traffic[today_traffic >= self.current_time]
-        while self.current_time == today_traffic[0]:
+        while len(today_traffic) > 0 and self.current_time == today_traffic[0]:
             self.generate_ues()
             today_traffic = today_traffic[1:]
 
@@ -102,3 +110,6 @@ class Env:
         res = self.env_sock.recv(1024).decode()
         assert res[0:3] == "eok"
         self.env_sock.close()
+
+    def reset(self):
+        self.com.reset()

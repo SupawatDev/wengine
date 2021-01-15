@@ -30,6 +30,7 @@ class UE:
         dest = self.visit_points[0]
         if Distance(dest, self.position) < 3:
             if len(self.visit_points) == 1:
+                # TODO[]: Remove UE out from Scene
                 return False
             else:
                 # pop front out, update est
@@ -41,6 +42,8 @@ class UE:
         self.update()
 
     def update(self):
+        if len(self.env.BSs) == 0:
+            return
         # TODO[]: Pick up the best signal
         results = OrderedDict()
         noise_power = 0

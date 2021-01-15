@@ -9,4 +9,6 @@ class BS:
 
     def get_gain(self, nearest_position):
         # TODO: calculate gain
-        None
+        return None
+
+
